@@ -60,7 +60,7 @@
 {{-- RECENT ORDERS --}}
 <div class="bg-white rounded-xl shadow p-6">
     <h2 class="text-lg font-bold text-amber-900 mb-4">Recent Orders</h2>
-    <table class="w-full text-sm">
+    <table id="recentOrdersTable" class="w-full text-sm">
         <thead>
             <tr class="text-left text-gray-400 border-b">
                 <th class="pb-3">Order #</th>
@@ -84,7 +84,7 @@
             @endphp
             <tr class="border-b last:border-0 hover:bg-gray-50">
                 <td class="py-3 font-semibold">#{{ $order->id }}</td>
-                <td class="py-3">{{ $order->user->name }}</td>
+                <td class="py-3">{{ $order->user_name }}</td>
                 <td class="py-3 text-amber-700 font-semibold">
                     ₱{{ number_format($order->total_price, 2) }}
                 </td>
@@ -95,7 +95,7 @@
                     </span>
                 </td>
                 <td class="py-3 text-gray-400">
-                    {{ $order->created_at->format('M d, Y') }}
+                    {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}
                 </td>
                 <td class="py-3">
                     <a href="{{ route('admin.orders.show', $order->id) }}"
@@ -108,5 +108,14 @@
         </tbody>
     </table>
 </div>
+
+{{-- HIDDEN URL para sa JS --}}
+<div id="dashboardUrl" data-url="{{ route('admin.dashboard') }}" class="hidden"></div>
+
+@push('scripts')
+<script src="{{ asset('js/dashboard.js') }}"></script>
+@endpush
+
+
 
 @endsection

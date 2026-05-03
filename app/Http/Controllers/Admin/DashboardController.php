@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
@@ -12,28 +13,42 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // ═══════════════════════════════════
-        //  STATS
-        // ═══════════════════════════════════
-        $totalSales    = Order::where('payment_status', 'paid')->sum('total_price');
-        $totalOrders   = Order::count();
-        $totalProducts = Product::count();
-        $totalCustomers = User::where('role', 'customer')->count();
+        $totalSales = DB::selectOne('
+            SELECT SUM(total_price) as total
+            FROM orders WHERE payment_status = "paid"
+        ')->total ?? 0;
 
-        // ═══════════════════════════════════
-        //  RECENT ORDERS
-        // ═══════════════════════════════════
-        $recentOrders = Order::with('user')
-                             ->latest()
-                             ->take(10)
-                             ->get();
+        $totalOrders = DB::selectOne('
+            SELECT COUNT(*) as total FROM orders
+        ')->total;
 
-        // ═══════════════════════════════════
-        //  ORDERS BY STATUS
-        // ═══════════════════════════════════
-        $pendingOrders   = Order::where('status', 'pending')->count();
-        $preparingOrders = Order::where('status', 'preparing')->count();
-        $readyOrders     = Order::where('status', 'ready')->count();
+        $totalProducts = DB::selectOne('
+            SELECT COUNT(*) as total FROM products
+        ')->total;
+
+        $totalCustomers = DB::selectOne('
+            SELECT COUNT(*) as total FROM users WHERE role = "customer"
+        ')->total;
+
+        $recentOrders = DB::select('
+            SELECT o.*, u.name as user_name
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            ORDER BY o.created_at DESC
+            LIMIT 10
+        ');
+
+        $pendingOrders = DB::selectOne('
+            SELECT COUNT(*) as total FROM orders WHERE status = "pending"
+        ')->total;
+
+        $preparingOrders = DB::selectOne('
+            SELECT COUNT(*) as total FROM orders WHERE status = "preparing"
+        ')->total;
+
+        $readyOrders = DB::selectOne('
+            SELECT COUNT(*) as total FROM orders WHERE status = "ready"
+        ')->total;
 
         return view('admin.dashboard', compact(
             'totalSales',

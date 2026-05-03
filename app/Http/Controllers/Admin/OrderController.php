@@ -13,9 +13,12 @@ class OrderController extends Controller
     // ═══════════════════════════════════
     public function index()
     {
-        $orders = Order::with('user')
-                       ->latest()
-                       ->paginate(15);
+        $orders = DB::select('
+            SELECT o.*, u.name as user_name
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            ORDER BY o.created_at DESC
+        ');
 
         return view('admin.orders.index', compact('orders'));
     }
@@ -23,10 +26,24 @@ class OrderController extends Controller
     // ═══════════════════════════════════
     //  SHOW SINGLE ORDER
     // ═══════════════════════════════════
-    public function show($id)
+   public function show($id)
     {
-        $order = Order::with(['user', 'items.product'])
-                      ->findOrFail($id);
+        $order = DB::selectOne('
+            SELECT o.*, u.name as user_name, u.email as user_email,
+                u.phone as user_phone, u.address as user_address
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            WHERE o.id = ?
+        ', [$id]);
+
+        if (!$order) abort(404);
+
+        $order->items = DB::select('
+            SELECT oi.*, p.name as product_name, p.image as product_image
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        ', [$order->id]);
 
         return view('admin.orders.show', compact('order'));
     }
@@ -40,14 +57,21 @@ class OrderController extends Controller
             'status' => 'required|in:pending,preparing,ready,completed,cancelled',
         ]);
 
-        $order = Order::findOrFail($id);
-        $order->update(['status' => $request->status]);
+        DB::update('
+            UPDATE orders SET status = ?, updated_at = NOW()
+            WHERE id = ?
+        ', [$request->status, $id]);
 
-        // Kung completed, i-mark bilang paid
         if ($request->status === 'completed') {
-            $order->update(['payment_status' => 'paid']);
+            DB::update('
+                UPDATE orders SET payment_status = ?, updated_at = NOW()
+                WHERE id = ?
+            ', ['paid', $id]);
         }
 
-        return back()->with('success', 'Order status updated!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Order status updated successfully!'
+        ]);
     }
 }

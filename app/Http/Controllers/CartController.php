@@ -3,20 +3,33 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Cart;
-use App\Models\CartItem;
-use App\Models\Product;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
     // ═══════════════════════════════════
-    //  GET CART OF USER
+    //  GET OR CREATE CART
     // ═══════════════════════════════════
     private function getCart()
     {
-        return Cart::firstOrCreate(
-            ['user_id' => auth()->id()]
-        );
+        $userId = Auth::id();
+        $cart   = DB::selectOne('
+            SELECT * FROM carts WHERE user_id = ?
+        ', [$userId]);
+
+        if (!$cart) {
+            DB::insert('
+                INSERT INTO carts (user_id, created_at, updated_at)
+                VALUES (?, NOW(), NOW())
+            ', [$userId]);
+
+            $cart = DB::selectOne('
+                SELECT * FROM carts WHERE user_id = ?
+            ', [$userId]);
+        }
+
+        return $cart;
     }
 
     // ═══════════════════════════════════
@@ -24,15 +37,26 @@ class CartController extends Controller
     // ═══════════════════════════════════
     public function index()
     {
-        $cart  = $this->getCart();
-        $items = $cart->items()->with('product')->get();
-        $total = $items->sum(fn($item) => $item->product->price * $item->quantity);
+        $cart = $this->getCart();
+
+        $items = DB::select('
+            SELECT ci.*, p.name as product_name, p.price as product_price,
+                   p.image as product_image
+            FROM cart_items ci
+            JOIN products p ON ci.product_id = p.id
+            WHERE ci.cart_id = ?
+        ', [$cart->id]);
+
+        $total = array_sum(array_map(
+            fn($item) => $item->product_price * $item->quantity,
+            $items
+        ));
 
         return view('customer.cart', compact('cart', 'items', 'total'));
     }
 
     // ═══════════════════════════════════
-    //  ADD TO CART
+    //  ADD TO CART (AJAX)
     // ═══════════════════════════════════
     public function add(Request $request)
     {
@@ -42,35 +66,58 @@ class CartController extends Controller
             'size'       => 'nullable|string',
         ]);
 
-        $product = Product::findOrFail($request->product_id);
+        $product = DB::selectOne('
+            SELECT * FROM products WHERE id = ?
+        ', [$request->product_id]);
 
         if (!$product->is_available) {
-            return back()->with('error', 'Sorry, this product is not available.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Sorry, this product is not available.'
+            ], 400);
         }
 
         $cart = $this->getCart();
 
-        $cartItem = $cart->items()
-                         ->where('product_id', $request->product_id)
-                         ->where('size', $request->size)
-                         ->first();
+        $cartItem = DB::selectOne('
+            SELECT * FROM cart_items
+            WHERE cart_id = ? AND product_id = ? AND size = ?
+        ', [$cart->id, $request->product_id, $request->size]);
 
         if ($cartItem) {
-            $cartItem->increment('quantity', $request->quantity);
+            DB::update('
+                UPDATE cart_items
+                SET quantity = quantity + ?, updated_at = NOW()
+                WHERE id = ?
+            ', [$request->quantity, $cartItem->id]);
         } else {
-            $cart->items()->create([
-                'product_id' => $request->product_id,
-                'quantity'   => $request->quantity,
-                'size'       => $request->size,
-                'extras'     => $request->extras ?? null,
+            DB::insert('
+                INSERT INTO cart_items
+                (cart_id, product_id, quantity, size, extras, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+            ', [
+                $cart->id,
+                $request->product_id,
+                $request->quantity,
+                $request->size,
+                $request->extras ?? null,
             ]);
         }
 
-        return back()->with('success', $product->name . ' added to cart successfully!');
+        // Count cart items para sa badge
+        $cartCount = DB::selectOne('
+            SELECT COUNT(*) as count FROM cart_items WHERE cart_id = ?
+        ', [$cart->id]);
+
+        return response()->json([
+            'success'    => true,
+            'message'    => $product->name . ' added to cart successfully!',
+            'cart_count' => $cartCount->count,
+        ]);
     }
 
     // ═══════════════════════════════════
-    //  UPDATE CART ITEM QUANTITY
+    //  UPDATE CART ITEM (AJAX)
     // ═══════════════════════════════════
     public function update(Request $request, $id)
     {
@@ -78,37 +125,77 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $cartItem = CartItem::where('id', $id)
-                            ->whereHas('cart', fn($q) => $q->where('user_id', auth()->id()))
-                            ->firstOrFail();
+        $userId = Auth::id();
 
-        $cartItem->update(['quantity' => $request->quantity]);
+        $cartItem = DB::selectOne('
+            SELECT ci.* FROM cart_items ci
+            JOIN carts c ON ci.cart_id = c.id
+            WHERE ci.id = ? AND c.user_id = ?
+        ', [$id, $userId]);
 
-        return back()->with('success', 'Cart updated successfully!');
+        if (!$cartItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart item not found.'
+            ], 404);
+        }
+
+        DB::update('
+            UPDATE cart_items
+            SET quantity = ?, updated_at = NOW()
+            WHERE id = ?
+        ', [$request->quantity, $id]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cart updated successfully!',
+        ]);
     }
 
     // ═══════════════════════════════════
-    //  REMOVE ITEM FROM CART
+    //  REMOVE ITEM (AJAX)
     // ═══════════════════════════════════
     public function remove($id)
     {
-        $cartItem = CartItem::where('id', $id)
-                            ->whereHas('cart', fn($q) => $q->where('user_id', auth()->id()))
-                            ->firstOrFail();
+        $userId = Auth::id();
 
-        $cartItem->delete();
+        $cartItem = DB::selectOne('
+            SELECT ci.* FROM cart_items ci
+            JOIN carts c ON ci.cart_id = c.id
+            WHERE ci.id = ? AND c.user_id = ?
+        ', [$id, $userId]);
 
-        return back()->with('success', 'Item removed from cart successfully!');
+        if (!$cartItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart item not found.'
+            ], 404);
+        }
+
+        DB::delete('
+            DELETE FROM cart_items WHERE id = ?
+        ', [$id]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Item removed from cart successfully!',
+        ]);
     }
 
     // ═══════════════════════════════════
-    //  CLEAR ALL ITEMS FROM CART
+    //  CLEAR CART (AJAX)
     // ═══════════════════════════════════
     public function clear()
     {
         $cart = $this->getCart();
-        $cart->items()->delete();
 
-        return back()->with('success', 'Cart cleared successfully!');
+        DB::delete('
+            DELETE FROM cart_items WHERE cart_id = ?
+        ', [$cart->id]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cart cleared successfully!',
+        ]);
     }
 }

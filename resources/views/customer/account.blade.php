@@ -218,7 +218,7 @@
                             Order #{{ $order->id }}
                         </p>
                         <p class="text-xs text-gray-400">
-                            {{ $order->created_at->format('M d, Y h:i A') }}
+                            {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y h:i A') }}
                         </p>
                     </div>
                     <div class="text-right">

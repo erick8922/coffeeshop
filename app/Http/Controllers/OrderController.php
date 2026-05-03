@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Cart;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -18,10 +15,21 @@ class OrderController extends Controller
     {
         $userId = Auth::id();
 
-        $orders = Order::where('user_id', $userId)
-                       ->with('items.product')
-                       ->latest()
-                       ->paginate(10);
+        $orders = DB::select('
+            SELECT * FROM orders
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT 10
+        ', [$userId]);
+
+        foreach ($orders as $order) {
+            $order->items = DB::select('
+                SELECT oi.*, p.name as product_name, p.image as product_image
+                FROM order_items oi
+                JOIN products p ON oi.product_id = p.id
+                WHERE oi.order_id = ?
+            ', [$order->id]);
+        }
 
         return view('customer.orders', compact('orders'));
     }
@@ -33,16 +41,25 @@ class OrderController extends Controller
     {
         $userId = Auth::id();
 
-        $order = Order::where('id', $id)
-                      ->where('user_id', $userId)
-                      ->with('items.product')
-                      ->firstOrFail();
+        $order = DB::selectOne('
+            SELECT * FROM orders
+            WHERE id = ? AND user_id = ?
+        ', [$id, $userId]);
+
+        if (!$order) abort(404);
+
+        $order->items = DB::select('
+            SELECT oi.*, p.name as product_name, p.image as product_image
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        ', [$order->id]);
 
         return view('customer.order-detail', compact('order'));
     }
 
     // ═══════════════════════════════════
-    //  CHECKOUT
+    //  CHECKOUT (AJAX)
     // ═══════════════════════════════════
     public function checkout(Request $request)
     {
@@ -53,48 +70,86 @@ class OrderController extends Controller
 
         $userId = Auth::id();
 
-        $cart = Cart::where('user_id', $userId)
-                    ->with('items.product')
-                    ->first();
+        $cart = DB::selectOne('
+            SELECT * FROM carts WHERE user_id = ?
+        ', [$userId]);
 
-        if (!$cart || $cart->items->isEmpty()) {
-            return redirect()->route('cart.index')
-                             ->with('error', 'Your cart is empty!');
+        if (!$cart) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your cart is empty!'
+            ], 400);
         }
 
-        $total = $cart->items->sum(
-            fn($item) => $item->product->price * $item->quantity
-        );
+        $items = DB::select('
+            SELECT ci.*, p.price as product_price
+            FROM cart_items ci
+            JOIN products p ON ci.product_id = p.id
+            WHERE ci.cart_id = ?
+        ', [$cart->id]);
 
-        DB::transaction(function () use ($cart, $total, $request, $userId) {
+        if (empty($items)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your cart is empty!'
+            ], 400);
+        }
 
-            $order = Order::create([
-                'user_id'        => $userId,
-                'total_price'    => $total,
-                'status'         => 'pending',
-                'payment_method' => $request->payment_method,
-                'payment_status' => 'unpaid',
-                'notes'          => $request->notes,
-                'ordered_at'     => now(),
+        $total = array_sum(array_map(
+            fn($item) => $item->product_price * $item->quantity,
+            $items
+        ));
+
+        DB::beginTransaction();
+        try {
+            DB::insert('
+                INSERT INTO orders
+                (user_id, total_price, status, payment_method, payment_status, notes, ordered_at, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), NOW())
+            ', [
+                $userId,
+                $total,
+                'pending',
+                $request->payment_method,
+                'unpaid',
+                $request->notes,
             ]);
 
-            foreach ($cart->items as $item) {
-                OrderItem::create([
-                    'order_id'   => $order->id,
-                    'product_id' => $item->product_id,
-                    'quantity'   => $item->quantity,
-                    'price'      => $item->product->price,
-                    'size'       => $item->size,
+            $orderId = DB::getPdo()->lastInsertId();
+
+            foreach ($items as $item) {
+                DB::insert('
+                    INSERT INTO order_items
+                    (order_id, product_id, quantity, price, size, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+                ', [
+                    $orderId,
+                    $item->product_id,
+                    $item->quantity,
+                    $item->product_price,
+                    $item->size,
                 ]);
             }
 
-            $cart->items()->delete();
+            DB::delete('
+                DELETE FROM cart_items WHERE cart_id = ?
+            ', [$cart->id]);
 
-            session(['last_order_id' => $order->id]);
-        });
+            DB::commit();
 
-        return redirect()->route('orders.success', session('last_order_id'))
-                         ->with('success', 'Your order has been placed successfully!');
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Your order has been placed successfully!',
+                'order_id' => $orderId,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong. Please try again.'
+            ], 500);
+        }
     }
 
     // ═══════════════════════════════════
@@ -104,10 +159,19 @@ class OrderController extends Controller
     {
         $userId = Auth::id();
 
-        $order = Order::where('id', $id)
-                      ->where('user_id', $userId)
-                      ->with('items.product')
-                      ->firstOrFail();
+        $order = DB::selectOne('
+            SELECT * FROM orders
+            WHERE id = ? AND user_id = ?
+        ', [$id, $userId]);
+
+        if (!$order) abort(404);
+
+        $order->items = DB::select('
+            SELECT oi.*, p.name as product_name
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        ', [$order->id]);
 
         return view('customer.order-success', compact('order'));
     }

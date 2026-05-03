@@ -118,12 +118,22 @@ class ProductController extends Controller
     // ═══════════════════════════════════
     //  DELETE PRODUCT
     // ═══════════════════════════════════
-    public function destroy($id)
-    {
-        $product = Product::findOrFail($id);
-        $product->delete();
+    public function destroy($id){
+        
+        $product = DB::selectOne('SELECT * FROM products WHERE id = ?', [$id]);
 
-        return redirect()->route('admin.products.index')
-                         ->with('success', 'Product deleted!');
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found!'
+            ], 404);
+        }
+
+        DB::delete('DELETE FROM products WHERE id = ?', [$id]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product deleted successfully!'
+        ]);
     }
 }

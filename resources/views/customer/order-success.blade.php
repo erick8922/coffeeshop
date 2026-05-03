@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="max-w-lg mx-auto text-center py-16">
-    <p class="text-7xl mb-6">🎉</p>
+    
     <h1 class="text-3xl font-bold text-amber-900 mb-2">
         Thank You for Your Order!
     </h1>
@@ -32,7 +32,7 @@
             </div>
             <div>
                 <p class="text-gray-400">Items</p>
-                <p class="font-semibold">{{ $order->items->count() }} item(s)</p>
+                <p class="font-semibold">{{ count($order->items) }} item(s)</p>
             </div>
         </div>
     </div>

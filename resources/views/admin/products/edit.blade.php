@@ -12,7 +12,7 @@
     </div>
 
     <div class="bg-white rounded-xl shadow p-6">
-        <form method="POST"
+        <form id="productForm" method="POST"
               action="{{ route('admin.products.update', $product->id) }}"
               enctype="multipart/form-data">
             @csrf
@@ -129,7 +129,7 @@
             <button type="submit"
                 class="w-full bg-amber-900 text-white py-3 rounded-xl font-semibold
                        hover:bg-amber-700 transition">
-                💾 Update Product
+                Update Product
             </button>
         </form>
     </div>

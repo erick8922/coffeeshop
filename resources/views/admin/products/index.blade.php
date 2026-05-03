@@ -9,36 +9,50 @@
     <a href="{{ route('admin.products.create') }}"
        class="bg-amber-900 text-white px-4 py-2 rounded-lg text-sm
               hover:bg-amber-700 transition">
-        Add Product
+        + Add Product
     </a>
 </div>
 
-<div class="bg-white rounded-xl shadow overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-gray-50 text-gray-400 text-left">
-            <tr>
-                <th class="px-6 py-3">Product</th>
-                <th class="px-6 py-3">Category</th>
-                <th class="px-6 py-3">Price</th>
-                <th class="px-6 py-3">Stock</th>
-                <th class="px-6 py-3">Status</th>
-                <th class="px-6 py-3">Actions</th>
+<div class="bg-white rounded-xl shadow overflow-hidden p-4">
+    <table id="productsTable" class="w-full text-sm">
+        <thead>
+            <tr class="text-left text-gray-400 border-b">
+                <th class="px-4 py-3">#</th>
+                <th class="px-4 py-3">Image</th>
+                <th class="px-4 py-3">Product Name</th>
+                <th class="px-4 py-3">Category</th>
+                <th class="px-4 py-3">Price</th>
+                <th class="px-4 py-3">Stock</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach($products as $product)
-            <tr class="border-t hover:bg-gray-50">
-                <td class="px-6 py-4 font-semibold text-amber-900">
+            <tr class="border-b hover:bg-gray-50">
+                <td class="px-4 py-3">{{ $product->id }}</td>
+                <td class="px-4 py-3">
+                    @if($product->image)
+                        <img src="{{ asset('storage/' . $product->image) }}"
+                             class="w-12 h-12 object-cover rounded-lg">
+                    @else
+                        <div class="w-12 h-12 bg-amber-100 rounded-lg flex
+                                    items-center justify-center">
+                            <span class="text-xl">☕</span>
+                        </div>
+                    @endif
+                </td>
+                <td class="px-4 py-3 font-semibold text-amber-900">
                     {{ $product->name }}
                 </td>
-                <td class="px-6 py-4 text-gray-500">
-                    {{ $product->category->name }}
+                <td class="px-4 py-3 text-gray-500">
+                    {{ $product->category_name }}
                 </td>
-                <td class="px-6 py-4 text-amber-700 font-semibold">
+                <td class="px-4 py-3 text-amber-700 font-semibold">
                     ₱{{ number_format($product->price, 2) }}
                 </td>
-                <td class="px-6 py-4">{{ $product->stock }}</td>
-                <td class="px-6 py-4">
+                <td class="px-4 py-3">{{ $product->stock }}</td>
+                <td class="px-4 py-3">
                     @if($product->is_available)
                         <span class="bg-green-100 text-green-700 px-2 py-1
                                      rounded-full text-xs font-semibold">
@@ -51,27 +65,35 @@
                         </span>
                     @endif
                 </td>
-                <td class="px-6 py-4 flex gap-3">
-                    <a href="{{ route('admin.products.edit', $product->id) }}"
-                       class="text-blue-500 hover:underline text-xs">
-                        Edit
-                    </a>
-                    <form method="POST"
-                          action="{{ route('admin.products.destroy', $product->id) }}">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                                class="text-red-400 hover:underline text-xs"
-                                onclick="return confirm('Tanggalin ang product?')">
+                <td class="px-4 py-3">
+                    <div class="flex gap-2">
+                        <a href="{{ route('admin.products.edit', $product->id) }}"
+                           class="bg-blue-500 text-white px-3 py-1 rounded-lg
+                                  text-xs hover:bg-blue-600 transition">
+                            Edit
+                        </a>
+                        <button type="button"
+                                class="delete-btn bg-red-500 text-white px-3 py-1
+                                       rounded-lg text-xs hover:bg-red-600 transition"
+                                data-id="{{ $product->id }}"
+                                data-url="{{ route('admin.products.destroy', $product->id) }}">
                             Delete
                         </button>
-                    </form>
+                    </div>
                 </td>
             </tr>
             @endforeach
         </tbody>
     </table>
-    <div class="p-4">{{ $products->links() }}</div>
 </div>
+
+{{-- HIDDEN URL para sa JS --}}
+<div id="productsUrl" data-url="{{ route('admin.products.index') }}" class="hidden"></div>
+
+@push('scripts')
+<script src="{{ asset('js/products.js') }}"></script>
+@endpush
+
+
 
 @endsection

@@ -34,7 +34,7 @@
             <div>
                 <p class="text-gray-400">Order Date</p>
                 <p class="font-semibold">
-                    {{ $order->created_at->format('M d, Y h:i A') }}
+                    {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y h:i A') }}
                 </p>
             </div>
             @if($order->notes)
@@ -53,7 +53,7 @@
             @foreach($order->items as $item)
             <div class="flex justify-between items-center py-2 border-b last:border-0">
                 <div>
-                    <p class="font-semibold">{{ $item->product->name }}</p>
+                    <p class="font-semibold">{{ $item->product_name }}</p>
                     @if($item->size)
                         <p class="text-xs text-gray-400">Size: {{ $item->size }}</p>
                     @endif

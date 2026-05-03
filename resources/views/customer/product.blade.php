@@ -10,15 +10,13 @@
     <div>
         @if($product->image)
             <div class="relative w-full h-80 overflow-hidden rounded-2xl shadow">
-                {{-- BLURRED BACKGROUND --}}
-                
+                @php $bgImage = asset('storage/' . $product->image); @endphp
                 <div class="absolute inset-0 bg-cover bg-center blur-md scale-110"
-                    style="background-image: url('{{ Storage::url($product->image) }}')">
+                     style="background-image: url('{{ $bgImage }}')">
                 </div>
-                {{-- ACTUAL IMAGE --}}
                 <img src="{{ asset('storage/' . $product->image) }}"
-                    alt="{{ $product->name }}"
-                    class="relative z-10 w-full h-full object-contain">
+                     alt="{{ $product->name }}"
+                     class="relative z-10 w-full h-full object-contain">
             </div>
         @else
             <div class="w-full h-80 bg-amber-100 rounded-2xl flex items-center justify-center">
@@ -30,7 +28,7 @@
     {{-- DETAILS --}}
     <div>
         <span class="text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
-            {{ $product->category->name }}
+            {{ $product->category_name }}
         </span>
         <h1 class="text-3xl font-bold text-amber-900 mt-3">{{ $product->name }}</h1>
         <p class="text-gray-500 mt-2">{{ $product->description }}</p>
@@ -46,20 +44,36 @@
             @csrf
             <input type="hidden" name="product_id" value="{{ $product->id }}">
 
-            {{-- SIZE --}}
+           {{-- SIZE --}}
             @php
-                $sizes = is_array($product->size_options)
-                         ? $product->size_options
-                         : json_decode($product->size_options, true);
+                $sizes = $product->size_options;
+
+                // Kung string, i-decode
+                if (is_string($sizes)) {
+                    $sizes = json_decode($sizes, true);
+                }
+
+                // Kung still string (double encoded), i-decode ulit
+                if (is_string($sizes)) {
+                    $sizes = json_decode($sizes, true);
+                }
+
+                // Kung null o empty, gawing empty array
+                if (!$sizes) {
+                    $sizes = [];
+                }
             @endphp
 
-            @if($sizes && count($sizes) > 0)
+            @if(count($sizes) > 0)
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Choose Size <span class="text-red-500">*</span>
                 </label>
                 <div class="flex gap-2">
                     @foreach($sizes as $index => $option)
+                    @php
+                        $option = is_array($option) ? $option : (array) $option;
+                    @endphp
                     <label class="cursor-pointer">
                         <input type="radio" name="size"
                                value="{{ $option['size'] }}"
@@ -120,44 +134,13 @@
             </div>
         </div>
 
-        <script>
-        // Update price kapag nagbago ang size
-        document.querySelectorAll('.size-radio').forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                const price = parseFloat(this.dataset.price);
-                document.getElementById('displayPrice').textContent =
-                    '₱' + price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
-            });
-        });
+        {{-- HIDDEN URL para sa JS --}}
+        <div id="cartUrl" data-url="{{ route('cart.add') }}" class="hidden"></div>
 
-        // Set initial price sa unang size
-        const firstSize = document.querySelector('.size-radio:checked');
-        if (firstSize) {
-            const price = parseFloat(firstSize.dataset.price);
-            document.getElementById('displayPrice').textContent =
-                '₱' + price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
-        }
+        @push('scripts')
+        <script src="{{ asset('js/customer/product.js') }}"></script>
+        @endpush
 
-        function handleAddToCart() {
-            const sizeOptions = document.querySelectorAll('.size-radio');
-            if (sizeOptions.length > 0) {
-                const selected = document.querySelector('.size-radio:checked');
-                if (!selected) {
-                    document.getElementById('sizePopup').classList.remove('hidden');
-                    return;
-                }
-            }
-            document.getElementById('addToCartForm').submit();
-        }
-
-        function closePopup() {
-            document.getElementById('sizePopup').classList.add('hidden');
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closePopup();
-        });
-        </script>
 
         @else
             <a href="{{ route('login') }}"
@@ -170,24 +153,22 @@
 </div>
 
 {{-- RELATED PRODUCTS --}}
-@if($related->isNotEmpty())
+@if(!empty($related))
 <div class="mt-12">
     <h2 class="text-2xl font-bold text-amber-900 mb-4">Related Products</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         @foreach($related as $item)
         <a href="{{ route('menu.show', $item->slug) }}"
            class="bg-white rounded-xl shadow p-4 hover:shadow-md transition text-center">
-            {{-- RELATED PRODUCT IMAGE --}}
             @if($item->image)
                 <div class="relative w-full h-28 overflow-hidden rounded-lg mb-3">
-                    {{-- BLURRED BACKGROUND --}}
+                    @php $bgRelated = asset('storage/' . $item->image); @endphp
                     <div class="absolute inset-0 bg-cover bg-center blur-md scale-110"
-                        style="background-image: url('{{ Storage::url($product->image) }}')">
+                         style="background-image: url('{{ $bgRelated }}')">
                     </div>
-                    {{-- ACTUAL IMAGE --}}
                     <img src="{{ asset('storage/' . $item->image) }}"
-                        alt="{{ $item->name }}"
-                        class="relative z-10 w-full h-full object-contain">
+                         alt="{{ $item->name }}"
+                         class="relative z-10 w-full h-full object-contain">
                 </div>
             @else
                 <div class="w-full h-28 bg-amber-100 rounded-lg flex items-center

@@ -33,17 +33,16 @@ class ProductController extends Controller
     // ═══════════════════════════════════
     //  MENU PAGE
     // ═══════════════════════════════════
-    public function index(Request $request)
-    {
+    public function index(Request $request){
+        
         $categories = DB::select('
-            SELECT * FROM categories
-            WHERE is_active = 1
+            SELECT * FROM categories WHERE is_active = 1
         ');
 
         $sql    = 'SELECT p.*, c.name as category_name
-                   FROM products p
-                   JOIN categories c ON p.category_id = c.id
-                   WHERE p.is_available = 1';
+                FROM products p
+                JOIN categories c ON p.category_id = c.id
+                WHERE p.is_available = 1';
         $params = [];
 
         if ($request->category) {
@@ -59,6 +58,15 @@ class ProductController extends Controller
         $sql .= ' ORDER BY p.created_at DESC';
 
         $allProducts = DB::select($sql, $params);
+
+        // Kung AJAX request
+        if ($request->ajax()) {
+            return response()->json([
+                'success'  => true,
+                'products' => $allProducts,
+                'total'    => count($allProducts),
+            ]);
+        }
 
         // Manual pagination
         $page     = $request->get('page', 1);
