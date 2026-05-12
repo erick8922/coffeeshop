@@ -15,7 +15,7 @@
 
             {{-- PHOTO --}}
             @if(auth()->user()->photo)
-                <img src="{{ asset('storage/' . auth()->user()->photo) }}"
+                <img src="{{ asset(auth()->user()->photo) }}"
                      alt="Profile Photo"
                      class="w-32 h-32 object-cover rounded-full mx-auto mb-4
                             border-4 border-amber-900">

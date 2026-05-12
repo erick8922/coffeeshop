@@ -80,10 +80,22 @@ class AccountController extends Controller
 
         $user = Auth::user();
 
-        $path = $request->file('photo')->store('profiles', 'public');
+        // Gumawa ng folder kung wala pa
+        $folder = public_path('images/profile_photos');
+        if (!file_exists($folder)) mkdir($folder, 0755, true);
+
+        // I-delete ang lumang photo
+        if ($user->photo && file_exists(public_path($user->photo))) {
+            unlink(public_path($user->photo));
+        }
+
+        // I-save ang bagong photo
+        $filename = time() . '_' . $request->file('photo')->getClientOriginalName();
+        $request->file('photo')->move($folder, $filename);
+        $path = 'images/profile_photos/' . $filename;
 
         $user->update(['photo' => $path]);
 
-        return back()->with('success', 'Profile photo updated successfully!');
+        return back()->with('success', 'Profile photo updated!');
     }
 }
