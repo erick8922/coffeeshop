@@ -110,7 +110,7 @@
                     Image (optional — upload only if you want to replace)
                 </label>
                 @if($product->image)
-                    <img src="{{ asset('storage/' . $product->image) }}"
+                    <img src="{{ asset('images/product_images/' . $product->image) }}"
                          class="w-24 h-24 object-cover rounded-lg mb-2">
                 @endif
                 <input type="file" name="image" accept="image/*"

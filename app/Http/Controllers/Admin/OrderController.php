@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
@@ -69,9 +70,7 @@ class OrderController extends Controller
             ', ['paid', $id]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Order status updated successfully!'
-        ]);
+        return redirect()->route('admin.orders.show', $id)
+            ->with('success', 'Order status updated successfully!');
     }
 }

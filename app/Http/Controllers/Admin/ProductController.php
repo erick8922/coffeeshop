@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
@@ -34,20 +35,36 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'category_id'  => 'required|exists:categories,id',
-            'name'         => 'required|string|max:255',
-            'description'  => 'nullable|string',
-            'price'        => 'required|numeric|min:0',
-            'stock'        => 'required|integer|min:0',
-            'image'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'size_options' => 'nullable|array',
-            'is_available' => 'boolean',
+            'category_id' => 'required|exists:categories,id',
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price'       => 'required|numeric|min:0',
+            'stock'       => 'required|integer|min:0',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'is_available'=> 'boolean',
         ]);
+
+        // I-build ang size_options
+        $sizeOptions = [];
+        if ($request->has('sizes')) {
+            foreach ($request->sizes as $size) {
+                $price = $request->size_prices[$size] ?? null;
+                if ($price) {
+                    $sizeOptions[] = [
+                        'size'  => $size,
+                        'price' => (float) $price,
+                    ];
+                }
+            }
+        }
 
         // I-upload ang image
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
+            $file      = $request->file('image');
+            $filename  = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('images/product_images'), $filename);
+            $imagePath = $filename;
         }
 
         Product::create([
@@ -58,12 +75,12 @@ class ProductController extends Controller
             'price'        => $request->price,
             'stock'        => $request->stock,
             'image'        => $imagePath,
-            'size_options' => json_encode($request->size_options ?? []),
+            'size_options' => json_encode($sizeOptions),
             'is_available' => $request->boolean('is_available', true),
         ]);
 
         return redirect()->route('admin.products.index')
-                         ->with('success', 'Product updated!');
+                        ->with('success', 'Product created!');
     }
 
     // ═══════════════════════════════════
@@ -84,20 +101,41 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $request->validate([
-            'category_id'  => 'required|exists:categories,id',
-            'name'         => 'required|string|max:255',
-            'description'  => 'nullable|string',
-            'price'        => 'required|numeric|min:0',
-            'stock'        => 'required|integer|min:0',
-            'image'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'size_options' => 'nullable|array',
-            'is_available' => 'boolean',
+            'category_id' => 'required|exists:categories,id',
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price'       => 'required|numeric|min:0',
+            'stock'       => 'required|integer|min:0',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'is_available'=> 'boolean',
         ]);
+
+        // I-build ang size_options
+        $sizeOptions = [];
+        if ($request->has('sizes')) {
+            foreach ($request->sizes as $size) {
+                $price = $request->size_prices[$size] ?? null;
+                if ($price) {
+                    $sizeOptions[] = [
+                        'size'  => $size,
+                        'price' => (float) $price,
+                    ];
+                }
+            }
+        }
 
         // I-upload ang bagong image kung meron
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
-            $product->image = $imagePath;
+            // Burahin ang lumang image
+            if ($product->image) {
+                $oldPath = public_path('images/product_images/' . $product->image);
+                if (file_exists($oldPath)) unlink($oldPath);
+            }
+
+            $file      = $request->file('image');
+            $filename  = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('images/product_images'), $filename);
+            $product->image = $filename;
         }
 
         $product->update([
@@ -107,19 +145,20 @@ class ProductController extends Controller
             'description'  => $request->description,
             'price'        => $request->price,
             'stock'        => $request->stock,
-            'size_options' => json_encode($request->size_options ?? []),
+            'size_options' => json_encode($sizeOptions),
             'is_available' => $request->boolean('is_available', true),
         ]);
 
         return redirect()->route('admin.products.index')
-                         ->with('success', 'Product updated!');
+                        ->with('success', 'Product updated!');
     }
+
 
     // ═══════════════════════════════════
     //  DELETE PRODUCT
     // ═══════════════════════════════════
     public function destroy($id){
-        
+
         $product = DB::selectOne('SELECT * FROM products WHERE id = ?', [$id]);
 
         if (!$product) {

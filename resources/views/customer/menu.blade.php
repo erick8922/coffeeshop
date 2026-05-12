@@ -67,11 +67,11 @@
             <div class="bg-white rounded-xl shadow hover:shadow-md transition overflow-hidden">
                 @if($product->image)
                     <div class="relative w-full h-44 overflow-hidden rounded-t-xl">
-                        @php $bgImage = asset('storage/' . $product->image); @endphp
+                        @php $bgImage = asset('images/product_images/' . $product->image); @endphp
                         <div class="absolute inset-0 bg-cover bg-center blur-md scale-110"
                             style="background-image: url('{{ $bgImage }}')">
                         </div>
-                        <img src="{{ asset('storage/' . $product->image) }}"
+                        <img src="{{ asset('images/product_images/' . $product->image) }}"
                             alt="{{ $product->name }}"
                             class="relative z-10 w-full h-full object-contain">
                     </div>

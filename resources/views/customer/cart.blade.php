@@ -33,8 +33,8 @@
                     <div class="w-20 h-20 bg-amber-100 rounded-lg flex items-center
                                 justify-center flex-shrink-0 overflow-hidden">
                         @if($item->product_image)
-                            <img src="{{ asset('storage/' . $item->product_image) }}"
-                                 class="w-full h-full object-cover rounded-lg">
+                            <img src="{{ asset('images/product_images/' . $item->product_image) }}"
+                                class="w-full h-full object-cover rounded-lg">
                         @else
                             <span class="text-3xl">☕</span>
                         @endif

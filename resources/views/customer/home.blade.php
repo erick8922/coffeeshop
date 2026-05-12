@@ -70,13 +70,14 @@
 
             {{-- IMAGE --}}
             @if($product->image)
+                @php $bgImage = asset('images/product_images/' . $product->image); @endphp
                 <div class="relative w-full h-48 overflow-hidden rounded-t-xl">
                     {{-- BLURRED BACKGROUND --}}
                     <div class="absolute inset-0 bg-cover bg-center blur-md scale-110"
-                        style="background-image: url('{{ Storage::url($product->image) }}')">
+                        style="background-image: url('{{ $bgImage }}')">
                     </div>
                     {{-- ACTUAL IMAGE --}}
-                    <img src="{{ asset('storage/' . $product->image) }}"
+                    <img src="{{ $bgImage }}"
                         alt="{{ $product->name }}"
                         class="relative z-10 w-full h-full object-contain">
                 </div>

@@ -10,11 +10,11 @@
     <div>
         @if($product->image)
             <div class="relative w-full h-80 overflow-hidden rounded-2xl shadow">
-                @php $bgImage = asset('storage/' . $product->image); @endphp
+                @php $bgImage = asset('images/product_images/' . $product->image); @endphp
                 <div class="absolute inset-0 bg-cover bg-center blur-md scale-110"
                      style="background-image: url('{{ $bgImage }}')">
                 </div>
-                <img src="{{ asset('storage/' . $product->image) }}"
+                <img src="{{ asset('images/product_images/' . $product->image) }}"
                      alt="{{ $product->name }}"
                      class="relative z-10 w-full h-full object-contain">
             </div>
@@ -162,11 +162,11 @@
            class="bg-white rounded-xl shadow p-4 hover:shadow-md transition text-center">
             @if($item->image)
                 <div class="relative w-full h-28 overflow-hidden rounded-lg mb-3">
-                    @php $bgRelated = asset('storage/' . $item->image); @endphp
+                    @php $bgRelated = asset('images/product_images/' . $item->image); @endphp
                     <div class="absolute inset-0 bg-cover bg-center blur-md scale-110"
                          style="background-image: url('{{ $bgRelated }}')">
                     </div>
-                    <img src="{{ asset('storage/' . $item->image) }}"
+                    <img src="{{ asset('images/product_images/' . $item->image) }}"
                          alt="{{ $item->name }}"
                          class="relative z-10 w-full h-full object-contain">
                 </div>

@@ -20,7 +20,7 @@
                 <th class="px-4 py-3">#</th>
                 <th class="px-4 py-3">Image</th>
                 <th class="px-4 py-3">Product Name</th>
-                <th class="px-4 py-3">Category</th>
+                <!-- <th class="px-4 py-3">Category</th> -->
                 <th class="px-4 py-3">Price</th>
                 <th class="px-4 py-3">Stock</th>
                 <th class="px-4 py-3">Status</th>
@@ -33,7 +33,7 @@
                 <td class="px-4 py-3">{{ $product->id }}</td>
                 <td class="px-4 py-3">
                     @if($product->image)
-                        <img src="{{ asset('storage/' . $product->image) }}"
+                        <img src="{{ asset('images/product_images/' . $product->image) }}"
                              class="w-12 h-12 object-cover rounded-lg">
                     @else
                         <div class="w-12 h-12 bg-amber-100 rounded-lg flex
@@ -45,9 +45,12 @@
                 <td class="px-4 py-3 font-semibold text-amber-900">
                     {{ $product->name }}
                 </td>
-                <td class="px-4 py-3 text-gray-500">
-                    {{ $product->category_name }}
-                </td>
+                <!-- <td class="px-4 py-3">
+                    <span class="text-xs text-amber-600 font-medium bg-amber-50
+                                 px-2 py-1 rounded-full">
+                        {{ $product->category_name }}
+                    </span>
+                </td> -->
                 <td class="px-4 py-3 text-amber-700 font-semibold">
                     ₱{{ number_format($product->price, 2) }}
                 </td>

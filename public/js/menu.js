@@ -64,8 +64,8 @@ $(document).ready(function() {
                     const imageHtml = product.image
                         ? `<div class="relative w-full h-44 overflow-hidden rounded-t-xl">
                                 <div class="absolute inset-0 bg-cover bg-center blur-md scale-110"
-                                     style="background-image: url('/storage/${product.image}')"></div>
-                                <img src="/storage/${product.image}"
+                                     style="background-image: url('/images/product_images/${product.image}')"></div>
+                                <img src="/images/product_images/${product.image}"
                                      alt="${product.name}"
                                      class="relative z-10 w-full h-full object-contain">
                            </div>`

@@ -14,6 +14,6 @@ class AdminMiddleware
             return $next($request);
         }
 
-        abort(403, 'Wala kang access dito.');
+        abort(403, 'YOU ARE NOT AUTHORIZED TO ACCESS THIS PAGE.');
     }
 }

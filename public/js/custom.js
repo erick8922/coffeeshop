@@ -187,4 +187,39 @@ $(document).ready(function() {
         $('#cartTotal').text('₱' + total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
     }
 
+    // ═══════════════════════════════════
+    //  Product Table
+    // ═══════════════════════════════════
+    $('#productForm').on('submit', function(e) {
+        e.preventDefault();
+
+        let btn = $(this).find('button[type="submit"]');
+        btn.text('Saving...').prop('disabled', true);
+
+        let formData = new FormData(this);
+
+        $.ajax({
+            url: BASE_URL + '/admin/products',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+
+            success: function(res) {
+                alert(res.message);
+
+                $('#productForm')[0].reset();
+                btn.text('Save Product').prop('disabled', false);
+
+                location.reload(); 
+            },
+
+            error: function(xhr) {
+                console.log(xhr.responseText);
+                alert('Error saving product');
+                btn.text('Save Product').prop('disabled', false);
+            }
+        });
+    });
+
 });

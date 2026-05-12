@@ -12,25 +12,25 @@
            class="text-sm text-amber-600 hover:underline">← Back</a>
     </div>
 
-    {{-- CUSTOMER INFO --}}
+   {{-- CUSTOMER INFO --}}
     <div class="bg-white rounded-xl shadow p-6 mb-6">
         <h3 class="font-bold text-gray-700 mb-3">Customer Info</h3>
         <div class="grid grid-cols-2 gap-3 text-sm">
             <div>
                 <p class="text-gray-400">Name</p>
-                <p class="font-semibold">{{ $order->user->name }}</p>
+                <p class="font-semibold">{{ $order->user_name }}</p>
             </div>
             <div>
                 <p class="text-gray-400">Email</p>
-                <p class="font-semibold">{{ $order->user->email }}</p>
+                <p class="font-semibold">{{ $order->user_email }}</p>
             </div>
             <div>
                 <p class="text-gray-400">Phone</p>
-                <p class="font-semibold">{{ $order->user->phone ?? 'N/A' }}</p>
+                <p class="font-semibold">{{ $order->user_phone ?? 'N/A' }}</p>
             </div>
             <div>
                 <p class="text-gray-400">Address</p>
-                <p class="font-semibold">{{ $order->user->address ?? 'N/A' }}</p>
+                <p class="font-semibold">{{ $order->user_address ?? 'N/A' }}</p>
             </div>
         </div>
     </div>
@@ -38,10 +38,10 @@
     {{-- ORDER ITEMS --}}
     <div class="bg-white rounded-xl shadow p-6 mb-6">
         <h3 class="font-bold text-gray-700 mb-3">Items</h3>
-        @foreach($order->items as $item)
+       @foreach($order->items as $item)
         <div class="flex justify-between items-center py-2 border-b last:border-0 text-sm">
             <div>
-                <p class="font-semibold">{{ $item->product->name }}</p>
+                <p class="font-semibold">{{ $item->product_name }}</p>  {{-- ← not $item->product->name --}}
                 @if($item->size)
                     <p class="text-xs text-gray-400">Size: {{ $item->size }}</p>
                 @endif
