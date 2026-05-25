@@ -11,6 +11,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 
 
 // ═══════════════════════════════════════
@@ -93,6 +94,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/orders/{id}',          [AdminOrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
 
+    // Categories
+    Route::get('/categories',           [AdminCategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create',    [AdminCategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories',          [AdminCategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{id}/edit', [AdminCategoryController::class, 'edit'])->name('categories.edit');
+    Route::patch('/categories/{id}',    [AdminCategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{id}',   [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
 });
 
 require __DIR__.'/auth.php';

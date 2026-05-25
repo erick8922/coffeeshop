@@ -16,8 +16,14 @@ class ProductController extends Controller
     // ═══════════════════════════════════
     public function index()
     {
-        $products = Product::with('category')->latest()->paginate(10);
-        return view('admin.products.index', compact('products'));
+           $products = DB::select('
+                SELECT p.*, c.name as category_name
+                FROM products p
+                JOIN categories c ON p.category_id = c.id
+                ORDER BY p.created_at DESC
+            ');
+
+            return view('admin.products.index', compact('products'));
     }
 
     // ═══════════════════════════════════
@@ -25,7 +31,9 @@ class ProductController extends Controller
     // ═══════════════════════════════════
     public function create()
     {
-        $categories = Category::where('is_active', true)->get();
+        $categories = DB::select('
+            SELECT * FROM categories WHERE is_active = 1
+        ');
         return view('admin.products.create', compact('categories'));
     }
 
@@ -88,8 +96,19 @@ class ProductController extends Controller
     // ═══════════════════════════════════
     public function edit($id)
     {
-        $product    = Product::findOrFail($id);
-        $categories = Category::where('is_active', true)->get();
+         $product = DB::selectOne('
+            SELECT p.*, c.name as category_name
+            FROM products p
+            JOIN categories c ON p.category_id = c.id
+            WHERE p.id = ?
+        ', [$id]);
+
+        if (!$product) abort(404);
+
+        $categories = DB::select('
+            SELECT * FROM categories WHERE is_active = 1
+        ');
+
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
