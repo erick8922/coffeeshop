@@ -13,6 +13,9 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        // ═══════════════════════════════════
+        //  STATS CARDS
+        // ═══════════════════════════════════
         $totalSales = DB::selectOne('
             SELECT SUM(total_price) as total
             FROM orders WHERE payment_status = "paid"
@@ -50,6 +53,57 @@ class DashboardController extends Controller
             SELECT COUNT(*) as total FROM orders WHERE status = "ready"
         ')->total;
 
+        // ═══════════════════════════════════
+        //  CHART DATA — Orders per month
+        // ═══════════════════════════════════
+        $ordersPerMonth = DB::select('
+            SELECT 
+                MONTHNAME(created_at) as month,
+                MONTH(created_at) as month_num,
+                COUNT(*) as total
+            FROM orders
+            WHERE YEAR(created_at) = YEAR(NOW())
+            GROUP BY MONTH(created_at), MONTHNAME(created_at)
+            ORDER BY MONTH(created_at) ASC
+        ');
+
+        // ═══════════════════════════════════
+        //  CHART DATA — Sales per month
+        // ═══════════════════════════════════
+        $salesPerMonth = DB::select('
+            SELECT 
+                MONTHNAME(created_at) as month,
+                MONTH(created_at) as month_num,
+                SUM(total_price) as total
+            FROM orders
+            WHERE YEAR(created_at) = YEAR(NOW())
+            AND payment_status = "paid"
+            GROUP BY MONTH(created_at), MONTHNAME(created_at)
+            ORDER BY MONTH(created_at) ASC
+        ');
+
+        // ═══════════════════════════════════
+        //  CHART DATA — Orders by status
+        // ═══════════════════════════════════
+        $ordersByStatus = DB::select('
+            SELECT status, COUNT(*) as total
+            FROM orders
+            GROUP BY status
+        ');
+
+        // ═══════════════════════════════════
+        //  CHART DATA — Top products
+        // ═══════════════════════════════════
+        $topProducts = DB::select('
+            SELECT p.name, SUM(oi.quantity) as total_sold
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            GROUP BY p.id, p.name
+            ORDER BY total_sold DESC
+            LIMIT 5
+        ');
+
+        // Single return with all variables
         return view('admin.dashboard', compact(
             'totalSales',
             'totalOrders',
@@ -58,7 +112,11 @@ class DashboardController extends Controller
             'recentOrders',
             'pendingOrders',
             'preparingOrders',
-            'readyOrders'
+            'readyOrders',
+            'ordersPerMonth',
+            'salesPerMonth',
+            'ordersByStatus',
+            'topProducts'
         ));
     }
 }

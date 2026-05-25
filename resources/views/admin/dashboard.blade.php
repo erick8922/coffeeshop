@@ -4,6 +4,8 @@
 
 @section('content')
 
+
+
 {{-- STATS CARDS --}}
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
@@ -53,6 +55,43 @@
     <div class="bg-green-50 border border-green-200 rounded-xl p-5">
         <p class="text-sm text-green-600 font-medium">Ready Orders</p>
         <p class="text-3xl font-bold text-green-700 mt-1">{{ $readyOrders }}</p>
+    </div>
+
+</div>
+
+{{-- CHARTS --}}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+    {{-- ORDERS PER MONTH --}}
+    <div class="bg-white rounded-xl shadow p-6">
+        <h3 class="text-lg font-bold text-amber-900 mb-4">
+            Orders per Month
+        </h3>
+        <canvas id="ordersChart" height="120"></canvas>
+    </div>
+
+    {{-- SALES PER MONTH --}}
+    <div class="bg-white rounded-xl shadow p-6">
+        <h3 class="text-lg font-bold text-amber-900 mb-4">
+            Sales per Month
+        </h3>
+        <canvas id="salesChart" height="120"></canvas>
+    </div>
+
+    {{-- ORDERS BY STATUS --}}
+    <div class="bg-white rounded-xl shadow p-6">
+        <h3 class="text-lg font-bold text-amber-900 mb-4">
+            Orders by Status
+        </h3>
+        <canvas id="statusChart" height="120"></canvas>
+    </div>
+
+    {{-- TOP PRODUCTS --}}
+    <div class="bg-white rounded-xl shadow p-6">
+        <h3 class="text-lg font-bold text-amber-900 mb-4">
+            Top 5 Products
+        </h3>
+        <canvas id="topProductsChart" height="120"></canvas>
     </div>
 
 </div>
@@ -113,6 +152,18 @@
 <div id="dashboardUrl" data-url="{{ route('admin.dashboard') }}" class="hidden"></div>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{{-- I-pass ang PHP data sa JavaScript via data attributes --}}
+<script>
+    window.dashboardData = {
+        ordersPerMonth: @json($ordersPerMonth),
+        salesPerMonth: @json($salesPerMonth),
+        ordersByStatus: @json($ordersByStatus),
+        topProducts: @json($topProducts)
+    };
+</script>
+
 <script src="{{ asset('js/dashboard.js') }}"></script>
 @endpush
 
