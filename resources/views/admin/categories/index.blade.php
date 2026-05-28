@@ -81,64 +81,10 @@
 </div>
 
 @push('scripts')
-<script>
-$(document).ready(function() {
-    $('#categoriesTable').DataTable({
-        responsive: true,
-        pageLength: 10,
-        order: [[0, 'desc']],
-        language: {
-            search: "Search categories:",
-            lengthMenu: "Show _MENU_ categories",
-        }
-    });
 
-    const token = $('meta[name="csrf-token"]').attr('content');
+<script src="{{ asset('js/admin/categories.js') }}"></script>
 
-    // DELETE CATEGORY
-    $(document).on('click', '.delete-category', function() {
-        if (!confirm('Are you sure you want to delete this category?')) return;
 
-        const btn = $(this);
-        const url = btn.data('url');
-        const id  = btn.data('id');
-
-        $.ajax({
-            url: url,
-            method: 'POST',
-            data: { _method: 'DELETE', _token: token },
-            success: function(response) {
-                if (response.success) {
-                    $('#categoriesTable').DataTable().row('#category-' + id).remove().draw();
-                    showToast('success', response.message);
-                } else {
-                    showToast('error', response.message);
-                }
-            },
-            error: function(xhr) {
-                const res = xhr.responseJSON;
-                showToast('error', res?.message ?? 'Something went wrong!');
-            }
-        });
-    });
-
-    function showToast(type, message) {
-        const colors = {
-            success: 'bg-green-100 border-green-400 text-green-700',
-            error:   'bg-red-100 border-red-400 text-red-700',
-        };
-        const icon  = type === 'success' ? '✅' : '❌';
-        const toast = $(`
-            <div class="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg border
-                        shadow-lg ${colors[type]}">
-                ${icon} ${message}
-            </div>
-        `);
-        $('body').append(toast);
-        setTimeout(() => toast.fadeOut(300, function() { $(this).remove(); }), 3000);
-    }
-});
-</script>
 @endpush
 
 @endsection

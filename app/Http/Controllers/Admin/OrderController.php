@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Order;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
     // ═══════════════════════════════════
-    //  LIST NG LAHAT NG ORDERS
+    //  LIST ALL ORDERS
     // ═══════════════════════════════════
     public function index()
     {
@@ -27,11 +26,11 @@ class OrderController extends Controller
     // ═══════════════════════════════════
     //  SHOW SINGLE ORDER
     // ═══════════════════════════════════
-   public function show($id)
+    public function show($id)
     {
         $order = DB::selectOne('
             SELECT o.*, u.name as user_name, u.email as user_email,
-                u.phone as user_phone, u.address as user_address
+                   u.phone as user_phone, u.address as user_address
             FROM orders o
             JOIN users u ON o.user_id = u.id
             WHERE o.id = ?
@@ -70,7 +69,41 @@ class OrderController extends Controller
             ', ['paid', $id]);
         }
 
-        return redirect()->route('admin.orders.show', $id)
-            ->with('success', 'Order status updated successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Order status updated successfully!'
+        ]);
+    }
+
+    // ═══════════════════════════════════
+    //  DELETE ORDER
+    // ═══════════════════════════════════
+    public function destroy($id)
+    {
+        $order = DB::selectOne('
+            SELECT * FROM orders WHERE id = ?
+        ', [$id]);
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found!'
+            ], 404);
+        }
+
+        if ($order->status !== 'completed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only completed orders can be deleted!'
+            ], 400);
+        }
+
+        DB::delete('DELETE FROM order_items WHERE order_id = ?', [$id]);
+        DB::delete('DELETE FROM orders WHERE id = ?', [$id]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order deleted successfully!'
+        ]);
     }
 }

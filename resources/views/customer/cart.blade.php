@@ -6,7 +6,7 @@
 
 <div class="relative rounded-2xl overflow-hidden p-6 mb-10">
 
-    <h1 class="text-3xl font-bold text-amber-900 mb-6">🛒 Your Cart</h1>
+    <h1 class="text-3xl font-bold text-amber-900 mb-6">Your Cart</h1>
 
     @if(empty($items))
         {{-- EMPTY CART --}}

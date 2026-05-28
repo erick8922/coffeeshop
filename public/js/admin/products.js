@@ -1,28 +1,29 @@
-// index
-
 $(document).ready(function() {
     // ═══════════════════════════════════
-    //  DATATABLES
+    //  DATATABLES — with reinit check
     // ═══════════════════════════════════
-    $('#productsTable').DataTable({
-        responsive: true,
-        pageLength: 10,
-        order: [[0, 'desc']], // Default sorting by ID
-        columnDefs: [
-            { orderable: false, targets: [1, 7] } // Image at Actions — hindi sortable
-        ],
-        language: {
-            search: "Search products:",
-            lengthMenu: "Show _MENU_ products",
-            info: "Showing _START_ to _END_ of _TOTAL_ products",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
+    if (!$.fn.DataTable.isDataTable('#productsTable')) {
+      $('#productsTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [6] }
+            ],
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']], 
+            language: {
+                search: "Search products:",
+                lengthMenu: "Show _MENU_ products", 
+                info: "Showing _START_ to _END_ of _TOTAL_ products",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
             }
-        }
-    });
+        });
+    }
 
     // ═══════════════════════════════════
     //  DELETE PRODUCT - AJAX
@@ -42,7 +43,6 @@ $(document).ready(function() {
             data: { _method: 'DELETE', _token: token },
             success: function(response) {
                 if (response.success) {
-                    // Remove row from DataTable
                     $('#productsTable').DataTable().row(row).remove().draw();
                     showToast('success', response.message);
                 }
@@ -53,9 +53,6 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════
-    //  TOAST NOTIFICATION
-    // ═══════════════════════════════════
     function showToast(type, message) {
         const colors = {
             success: 'bg-green-100 border-green-400 text-green-700',

@@ -30,7 +30,7 @@
                     'cancelled' => 'bg-red-100 text-red-600',
                 ];
             @endphp
-            <tr class="border-t hover:bg-gray-50">
+            <tr class="border-t hover:bg-gray-50" id="order-row-{{ $order->id }}">
                 <td class="px-4 py-3 font-semibold">#{{ $order->id }}</td>
                 <td class="px-4 py-3">{{ $order->user_name }}</td>
                 <td class="px-4 py-3 text-amber-700 font-semibold">
@@ -47,11 +47,22 @@
                     {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}
                 </td>
                 <td class="px-4 py-3">
-                    <a href="{{ route('admin.orders.show', $order->id) }}"
-                       class="bg-amber-900 text-white px-3 py-1 rounded-lg
-                              text-xs hover:bg-amber-700 transition">
-                        View
-                    </a>
+                    <div class="flex gap-2">
+                        <a href="{{ route('admin.orders.show', $order->id) }}"
+                           class="bg-amber-900 text-white px-3 py-1 rounded-lg
+                                  text-xs hover:bg-amber-700 transition">
+                            View
+                        </a>
+                        @if($order->status === 'completed')
+                        <button type="button"
+                                class="delete-order bg-red-500 text-white px-3 py-1
+                                       rounded-lg text-xs hover:bg-red-600 transition"
+                                data-id="{{ $order->id }}"
+                                data-url="{{ route('admin.orders.destroy', $order->id) }}">
+                            Delete
+                        </button>
+                        @endif
+                    </div>
                 </td>
             </tr>
             @endforeach
@@ -59,16 +70,42 @@
     </table>
 </div>
 
-{{-- HIDDEN URL para sa JS --}}
-<div id="ordersUrl" data-url="{{ route('admin.orders.index') }}" class="hidden"></div>
+{{-- DELETE CONFIRMATION MODAL --}}
+<div id="deleteConfirmModal"
+     class="fixed inset-0 z-50 items-center justify-center hidden"
+     style="display:none;">
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full
+                mx-auto mt-40 text-center z-10">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center
+                    justify-center mx-auto mb-4">
+            <span class="text-3xl">🗑️</span>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Delete this Order?</h3>
+        <p class="text-gray-500 text-sm mb-2">
+            This action <span class="font-semibold text-red-500">cannot be undone</span>.
+        </p>
+        <p class="text-gray-400 text-xs mb-6">
+            Only <span class="font-semibold text-green-600">completed</span> orders
+            can be deleted.
+        </p>
+        <div class="flex gap-3">
+            <button id="cancelDeleteBtn"
+                class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-xl
+                       font-semibold hover:bg-gray-200 transition">
+                Cancel
+            </button>
+            <button id="confirmDeleteBtn"
+                class="flex-1 bg-red-500 text-white py-2 rounded-xl
+                       font-semibold hover:bg-red-600 transition">
+                Yes, Delete
+            </button>
+        </div>
+    </div>
+</div>
 
 @push('scripts')
-<script src="{{ asset('js/orders.js') }}"></script>
+<script src="{{ asset('js/admin/orders.js') }}"></script>
 @endpush
-
-
-
-
-
 
 @endsection

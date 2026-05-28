@@ -1,25 +1,6 @@
 $(document).ready(function() {
 
     // ═══════════════════════════════════
-    //  DATATABLES - Admin Tables
-    // ═══════════════════════════════════
-    if ($('#productsTable').length) {
-        $('#productsTable').DataTable({
-            responsive: true,
-            pageLength: 10,
-            order: [[0, 'desc']],
-        });
-    }
-
-    if ($('#ordersTable').length) {
-        $('#ordersTable').DataTable({
-            responsive: true,
-            pageLength: 15,
-            order: [[0, 'desc']],
-        });
-    }
-
-    // ═══════════════════════════════════
     //  AJAX - Add to Cart
     // ═══════════════════════════════════
     $(document).on('submit', '#addToCartForm', function(e) {
@@ -32,7 +13,6 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     showAlert('success', response.message);
-                    // Update cart count sa navbar
                     $('#cartCount').text(response.cart_count);
                 }
             },
@@ -49,8 +29,8 @@ $(document).ready(function() {
     $(document).on('click', '.remove-item', function(e) {
         e.preventDefault();
 
-        const btn  = $(this);
-        const url  = btn.data('url');
+        const btn   = $(this);
+        const url   = btn.data('url');
         const token = $('meta[name="csrf-token"]').attr('content');
 
         if (!confirm('Remove this item?')) return;
@@ -58,10 +38,7 @@ $(document).ready(function() {
         $.ajax({
             url: url,
             method: 'POST',
-            data: {
-                _method: 'DELETE',
-                _token: token,
-            },
+            data: { _method: 'DELETE', _token: token },
             success: function(response) {
                 if (response.success) {
                     btn.closest('.cart-item').fadeOut(300, function() {
@@ -89,11 +66,7 @@ $(document).ready(function() {
         $.ajax({
             url: url,
             method: 'POST',
-            data: {
-                _method: 'PATCH',
-                _token: token,
-                quantity: quantity,
-            },
+            data: { _method: 'PATCH', _token: token, quantity: quantity },
             success: function(response) {
                 if (response.success) {
                     showAlert('success', response.message);
@@ -129,7 +102,7 @@ $(document).ready(function() {
     });
 
     // ═══════════════════════════════════
-    //  AJAX - Update Order Status (Admin)
+    //  AJAX - Update Order Status
     // ═══════════════════════════════════
     $(document).on('submit', '#updateStatusForm', function(e) {
         e.preventDefault();
@@ -157,18 +130,14 @@ $(document).ready(function() {
             success: 'bg-green-100 border-green-400 text-green-700',
             error:   'bg-red-100 border-red-400 text-red-700',
         };
-
-        const icon = type === 'success' ? '✅' : '❌';
-
+        const icon  = type === 'success' ? '✅' : '❌';
         const alert = $(`
             <div class="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg border
                         shadow-lg ${colors[type]} transition-all duration-300">
                 ${icon} ${message}
             </div>
         `);
-
         $('body').append(alert);
-
         setTimeout(function() {
             alert.fadeOut(300, function() { $(this).remove(); });
         }, 3000);
@@ -186,40 +155,5 @@ $(document).ready(function() {
         });
         $('#cartTotal').text('₱' + total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
     }
-
-    // ═══════════════════════════════════
-    //  Product Table
-    // ═══════════════════════════════════
-    $('#productForm').on('submit', function(e) {
-        e.preventDefault();
-
-        let btn = $(this).find('button[type="submit"]');
-        btn.text('Saving...').prop('disabled', true);
-
-        let formData = new FormData(this);
-
-        $.ajax({
-            url: BASE_URL + '/admin/products',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-
-            success: function(res) {
-                alert(res.message);
-
-                $('#productForm')[0].reset();
-                btn.text('Save Product').prop('disabled', false);
-
-                location.reload(); 
-            },
-
-            error: function(xhr) {
-                console.log(xhr.responseText);
-                alert('Error saving product');
-                btn.text('Save Product').prop('disabled', false);
-            }
-        });
-    });
 
 });

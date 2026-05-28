@@ -33,12 +33,8 @@
                 @auth
                     {{-- CART WITH BADGE --}}
                     <a href="{{ route('cart.index') }}" class="hover:text-amber-200 relative">
-                        🛒 Cart
-                        <span id="cartCount"
-                              class="absolute -top-2 -right-3 bg-white text-amber-900
-                                     rounded-full px-1.5 text-xs font-bold">
-                            0
-                        </span>
+                        Cart
+                        
                     </a>
 
                     <a href="{{ route('orders.index') }}" class="hover:text-amber-200">

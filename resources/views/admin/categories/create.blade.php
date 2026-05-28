@@ -47,66 +47,18 @@
             <button type="submit" id="submitBtn"
                 class="w-full bg-amber-900 text-white py-3 rounded-xl font-semibold
                        hover:bg-amber-700 transition">
-                💾 Save Category
+                Save Category
             </button>
         </form>
     </div>
 </div>
 
+{{-- HIDDEN URLs para sa JS --}}
+<div id="categoryStoreUrl" data-url="{{ route('admin.categories.store') }}" class="hidden"></div>
+<div id="categoryIndexUrl" data-url="{{ route('admin.categories.index') }}" class="hidden"></div>
+
 @push('scripts')
-<script>
-$(document).ready(function() {
-    $('#createCategoryForm').on('submit', function(e) {
-        e.preventDefault();
-
-        const token = $('meta[name="csrf-token"]').attr('content');
-        const btn   = $('#submitBtn');
-
-        btn.text('Saving...').prop('disabled', true);
-
-        $.ajax({
-            url: '{{ route('admin.categories.store') }}',
-            method: 'POST',
-            data: $(this).serialize(), // ← tanggalin na ang + '&_token=' + token
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    showToast('success', response.message);
-                    setTimeout(() => {
-                        window.location.href = '{{ route('admin.categories.index') }}';
-                    }, 1000);
-                }
-            },
-            error: function(xhr) {
-                console.log(xhr.responseJSON); // ← para makita ang exact error
-                const errors = xhr.responseJSON?.errors;
-                if (errors?.name) {
-                    $('#nameError').text(errors.name[0]).removeClass('hidden');
-                }
-                btn.text('💾 Save Category').prop('disabled', false);
-            }
-        });
-    });
-
-    function showToast(type, message) {
-        const colors = {
-            success: 'bg-green-100 border-green-400 text-green-700',
-            error:   'bg-red-100 border-red-400 text-red-700',
-        };
-        const icon  = type === 'success' ? '✅' : '❌';
-        const toast = $(`
-            <div class="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg border
-                        shadow-lg ${colors[type]}">
-                ${icon} ${message}
-            </div>
-        `);
-        $('body').append(toast);
-        setTimeout(() => toast.fadeOut(300, function() { $(this).remove(); }), 3000);
-    }
-});
-</script>
+<script src="{{ asset('js/admin/categories.js') }}"></script>
 @endpush
 
 @endsection

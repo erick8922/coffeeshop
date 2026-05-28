@@ -20,7 +20,6 @@
                 <th class="px-4 py-3">#</th>
                 <th class="px-4 py-3">Image</th>
                 <th class="px-4 py-3">Product Name</th>
-                <!-- <th class="px-4 py-3">Category</th> -->
                 <th class="px-4 py-3">Price</th>
                 <th class="px-4 py-3">Stock</th>
                 <th class="px-4 py-3">Status</th>
@@ -94,7 +93,7 @@
 <div id="productsUrl" data-url="{{ route('admin.products.index') }}" class="hidden"></div>
 
 @push('scripts')
-<script src="{{ asset('js/products.js') }}"></script>
+<script src="{{ asset('js/admin/products.js') }}"></script>
 @endpush
 
 
