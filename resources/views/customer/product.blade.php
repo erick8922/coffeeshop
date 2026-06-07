@@ -101,11 +101,18 @@
                            focus:outline-none focus:ring-2 focus:ring-amber-500">
             </div>
 
-            <button type="button" onclick="handleAddToCart()"
-                class="w-full bg-amber-900 text-white py-3 rounded-xl font-semibold
-                       hover:bg-amber-700 transition text-lg">
-                🛒 Add to Cart
-            </button>
+            @if($product->stock <= 0)
+                <div class="w-full bg-red-100 text-red-600 py-3 rounded-xl
+                            font-semibold text-center text-lg mt-6">
+                    ❌ Out of Stock
+                </div>
+            @else
+                <button type="button" onclick="handleAddToCart()"
+                    class="w-full bg-amber-900 text-white py-3 rounded-xl font-semibold
+                        hover:bg-amber-700 transition text-lg">
+                     Add to Cart
+                </button>
+            @endif
         </form>
 
         {{-- CUSTOM POPUP --}}

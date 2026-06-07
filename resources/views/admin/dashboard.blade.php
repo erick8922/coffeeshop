@@ -37,6 +37,13 @@
         </p>
     </div>
 
+    <div class="bg-red-50 border border-red-200 rounded-xl shadow p-6">
+        <p class="text-sm text-red-400">Out of Stock</p>
+        <p class="text-3xl font-bold text-red-600 mt-1">
+            {{ $outOfStockProducts }}
+        </p>
+    </div>
+
 </div>
 
 {{-- ORDER STATUS --}}
@@ -147,6 +154,66 @@
         </tbody>
     </table>
 </div>
+
+{{-- LOW STOCK WARNING --}}
+@if(count($lowStockProducts) > 0)
+<div class="bg-white rounded-xl shadow p-6 mb-8">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-red-600">
+            ⚠️ Low Stock Alert
+            <span class="ml-2 bg-red-100 text-red-600 px-2 py-0.5
+                         rounded-full text-sm font-semibold">
+                {{ count($lowStockProducts) }} product(s)
+            </span>
+        </h2>
+        <a href="{{ route('admin.products.index') }}"
+           class="text-sm text-amber-600 hover:underline">
+            Manage Products →
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-gray-400 border-b">
+                    <th class="pb-3">Product</th>
+                    <th class="pb-3">Stock</th>
+                    <th class="pb-3">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($lowStockProducts as $product)
+                <tr class="border-b last:border-0 hover:bg-gray-50">
+                    <td class="py-3 font-semibold text-amber-900">
+                        {{ $product->name }}
+                    </td>
+                    <td class="py-3">
+                        @if($product->stock == 0)
+                            <span class="bg-red-100 text-red-600 px-2 py-1
+                                         rounded-full text-xs font-semibold">
+                                Out of Stock
+                            </span>
+                        @else
+                            <span class="bg-yellow-100 text-yellow-700 px-2 py-1
+                                         rounded-full text-xs font-semibold">
+                                {{ $product->stock }} left
+                            </span>
+                        @endif
+                    </td>
+                    <td class="py-3">
+                        <a href="{{ route('admin.products.edit', $product->id) }}"
+                           class="bg-amber-900 text-white px-3 py-1 rounded-lg
+                                  text-xs hover:bg-amber-700 transition">
+                            Update Stock
+                        </a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
 
 {{-- HIDDEN URL para sa JS --}}
 <div id="dashboardUrl" data-url="{{ route('admin.dashboard') }}" class="hidden"></div>

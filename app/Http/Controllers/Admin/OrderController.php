@@ -20,6 +20,15 @@ class OrderController extends Controller
             ORDER BY o.created_at DESC
         ');
 
+        foreach ($orders as $order) {
+        $order->items = DB::select('
+            SELECT oi.*, p.name as product_name
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        ', [$order->id]);
+    }
+
         return view('admin.orders.index', compact('orders'));
     }
 

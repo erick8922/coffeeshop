@@ -82,7 +82,9 @@ class OrderController extends Controller
         }
 
         $items = DB::select('
-            SELECT ci.*, p.price as product_price
+            SELECT ci.*, p.name as product_name,
+                   p.price as product_price,
+                   p.stock as product_stock
             FROM cart_items ci
             JOIN products p ON ci.product_id = p.id
             WHERE ci.cart_id = ?
@@ -95,6 +97,27 @@ class OrderController extends Controller
             ], 400);
         }
 
+        // ═══════════════════════════════════
+        //  STOCK VALIDATION — bago mag-checkout
+        // ═══════════════════════════════════
+        foreach ($items as $item) {
+            if ($item->product_stock <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $item->product_name . ' is out of stock! 
+                                  Please remove it from your cart.'
+                ], 400);
+            }
+
+            if ($item->product_stock < $item->quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only ' . $item->product_stock . ' left for "' . 
+                                 $item->product_name . '". Please update your cart.'
+                ], 400);
+            }
+        }
+
         $total = array_sum(array_map(
             fn($item) => $item->product_price * $item->quantity,
             $items
@@ -104,7 +127,8 @@ class OrderController extends Controller
         try {
             DB::insert('
                 INSERT INTO orders
-                (user_id, total_price, status, payment_method, payment_status, notes, ordered_at, created_at, updated_at)
+                (user_id, total_price, status, payment_method, 
+                 payment_status, notes, ordered_at, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), NOW())
             ', [
                 $userId,
@@ -118,6 +142,7 @@ class OrderController extends Controller
             $orderId = DB::getPdo()->lastInsertId();
 
             foreach ($items as $item) {
+                // I-save ang order item
                 DB::insert('
                     INSERT INTO order_items
                     (order_id, product_id, quantity, price, size, created_at, updated_at)
@@ -129,8 +154,16 @@ class OrderController extends Controller
                     $item->product_price,
                     $item->size,
                 ]);
+
+                // Bawasan ang stock
+                DB::update('
+                    UPDATE products
+                    SET stock = stock - ?, updated_at = NOW()
+                    WHERE id = ? AND stock >= ?
+                ', [$item->quantity, $item->product_id, $item->quantity]);
             }
 
+            // I-clear ang cart
             DB::delete('
                 DELETE FROM cart_items WHERE cart_id = ?
             ', [$cart->id]);

@@ -82,7 +82,7 @@ $(document).ready(function() {
                 if (errors?.name) {
                     $('#nameError').text(errors.name[0]).removeClass('hidden');
                 }
-                btn.text('💾 Update Category').prop('disabled', false);
+                btn.text('Update Category').prop('disabled', false);
             }
         });
     });

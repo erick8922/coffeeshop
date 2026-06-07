@@ -31,7 +31,6 @@
                 <a href="{{ route('menu') }}" class="hover:text-amber-200">Menu</a>
 
                 @auth
-                    {{-- CART WITH BADGE --}}
                     <a href="{{ route('cart.index') }}" class="hover:text-amber-200 relative">
                         Cart
                         

@@ -90,11 +90,19 @@
                         <span class="text-amber-700 font-bold">
                             ₱{{ number_format($product->price, 2) }}
                         </span>
-                        <a href="{{ route('menu.show', $product->slug) }}"
-                        class="bg-amber-900 text-white px-3 py-1 rounded-full text-sm
-                                hover:bg-amber-700 transition">
-                            Order Now
-                        </a>
+
+                        @if($product->stock <= 0)
+                            <span class="bg-red-100 text-red-600 px-3 py-1 rounded-full
+                                        text-xs font-semibold">
+                                Out of Stock
+                            </span>
+                        @else
+                            <a href="{{ route('menu.show', $product->slug) }}"
+                            class="bg-amber-900 text-white px-3 py-1 rounded-full text-sm
+                                    hover:bg-amber-700 transition">
+                                Order Now
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

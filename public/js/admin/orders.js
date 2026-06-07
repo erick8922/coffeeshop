@@ -4,80 +4,28 @@ $(document).ready(function() {
     //  DATATABLES
     // ═══════════════════════════════════
     if (!$.fn.DataTable.isDataTable('#ordersTable')) {
-          $('#ordersTable').DataTable({
-        responsive: true,
-        pageLength: 10,
-        order: [[0, 'desc']],
-        columnDefs: [
-            { orderable: false, targets: [6] }
-        ],
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']], 
-        language: {
-            search: "Search orders:",
-            lengthMenu: "Show _MENU_ orders", 
-            info: "Showing _START_ to _END_ of _TOTAL_ orders",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        }
-    });
-    }
-
-    const token = $('meta[name="csrf-token"]').attr('content');
-    let deleteUrl = '';
-    let deleteRow = null;
-
-    // ═══════════════════════════════════
-    //  OPEN DELETE MODAL
-    // ═══════════════════════════════════
-    $(document).on('click', '.delete-order', function() {
-        deleteUrl = $(this).data('url');
-        deleteRow = $(this).closest('tr');
-        $('#deleteConfirmModal').show();
-    });
-
-    // ═══════════════════════════════════
-    //  CANCEL DELETE
-    // ═══════════════════════════════════
-    $('#cancelDeleteBtn').on('click', function() {
-        $('#deleteConfirmModal').hide();
-        deleteUrl = '';
-        deleteRow = null;
-    });
-
-    // ═══════════════════════════════════
-    //  CONFIRM DELETE
-    // ═══════════════════════════════════
-    $('#confirmDeleteBtn').on('click', function() {
-        if (!deleteUrl) return;
-
-        $('#deleteConfirmModal').hide();
-
-        $.ajax({
-            url: deleteUrl,
-            method: 'POST',
-            data: { _method: 'DELETE', _token: token },
-            success: function(response) {
-                if (response.success) {
-                    $('#ordersTable').DataTable().row(deleteRow).remove().draw();
-                    showToast('success', response.message);
-                } else {
-                    showToast('error', response.message);
+        $('#ordersTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            order: [[6, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [2, 7] }, // Items at Action — hindi sortable
+                {targets: [6], type: 'date' }
+            ],
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+            language: {
+                search: "Search orders:",
+                lengthMenu: "Show _MENU_ orders",
+                info: "Showing _START_ to _END_ of _TOTAL_ orders",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
                 }
-                deleteUrl = '';
-                deleteRow = null;
-            },
-            error: function(xhr) {
-                const res = xhr.responseJSON;
-                showToast('error', res?.message ?? 'Something went wrong!');
-                deleteUrl = '';
-                deleteRow = null;
             }
         });
-    });
+    }   
 
     // ═══════════════════════════════════
     //  TOAST NOTIFICATION

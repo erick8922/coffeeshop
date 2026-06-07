@@ -103,6 +103,18 @@ class DashboardController extends Controller
             LIMIT 5
         ');
 
+        $lowStockProducts = DB::select('
+            SELECT * FROM products
+            WHERE stock <= 5
+            AND is_available = 1
+            ORDER BY stock ASC
+        ');
+
+        $outOfStockProducts = DB::selectOne('
+            SELECT COUNT(*) as total FROM products
+            WHERE stock = 0
+        ')->total;
+
         // Single return with all variables
         return view('admin.dashboard', compact(
             'totalSales',
@@ -116,7 +128,9 @@ class DashboardController extends Controller
             'ordersPerMonth',
             'salesPerMonth',
             'ordersByStatus',
-            'topProducts'
+            'topProducts',
+            'lowStockProducts',
+            'outOfStockProducts'
         ));
     }
 }
